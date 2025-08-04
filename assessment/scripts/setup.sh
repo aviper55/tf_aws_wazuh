@@ -20,8 +20,10 @@ docker --version
 docker-compose --version
 
 
-# Prepare Wazuh Docker environment
-cd "$(dirname "$0")/../docker"
+# Clone Wazuh Docker repository and navigate to single-node folder
+git clone --branch v4.13.0-rc3 --depth 1 https://github.com/wazuh/wazuh-docker.git /tmp/wazuh-docker
+
+cd /tmp/wazuh-docker/single-node
 
 sysctl -w vm.max_map_count=262144
 

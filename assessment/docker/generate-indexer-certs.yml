@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   generator:
-    image: wazuh/wazuh-indexer:4.7.3
+    image: wazuh/wazuh-indexer:4.13
     command: ["bash", "-c", "/usr/share/wazuh-indexer/certs-tool/generate-certs.sh"]
     environment:
       - NODE_NAME=manager
