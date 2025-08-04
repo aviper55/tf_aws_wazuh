@@ -83,16 +83,20 @@ jobs:
 
       - name: Healthcheck Wazuh Manager
         run: |
-          MANAGER_ID=${{ steps.wait_manager.outputs.manager_id }}
-          docker exec $MANAGER_ID curl -f http://localhost:55000
-
-
-
-      - name: Healthcheck Wazuh Dashboard
-        run: |
-          DASHBOARD_ID=$(docker ps --format '{{.ID}} {{.Image}}' | grep 'wazuh/wazuh-dashboard' | awk '{print $1}')
-          docker exec $DASHBOARD_ID curl -f http://localhost:5601
-
+          export USER=wazuh-wui
+          export PWD=MyS3cr37P450r.*-
+          curl -u $USER:$PWD -k -X GET "https://localhost:55000/security/user/authenticate" -H "Content-Type:application/json" -d "{\"username\":\"$USER\",\"password\":\"$PWD\"}"
+          TOKEN=$(curl -u $USER:$PWD -k -X GET "https://localhost:55000/security/user/authenticate" -H "Content-Type:application/json" -d "{\"username\":\"$USER\",\"password\":\"$PWD\"}" | jq -r .data.token)
+          RESPONSE= $(curl -k -H "Authorization: Bearer $TOKEN" https://localhost:55000/)
+          TITLE=$(echo "$RESPONSE" | jq -r '.data.title')
+          if [ "$TITLE" = "Wazuh API REST" ]; then
+            echo "Healthcheck passed: Wazuh API REST detected."
+          else
+            echo "Healthcheck failed: Unexpected API response."
+            echo "$RESPONSE"
+            exit 1
+          fi
+      
 
       - name: Print all container logs on failure
         if: failure()
