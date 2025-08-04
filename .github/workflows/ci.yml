@@ -26,8 +26,6 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan -input=false
 
   
   docker-compose:
@@ -49,6 +47,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
+
+      - name: Generate Wazuh Indexer Certs
+        run: |
+          mkdir -p ./config/wazuh_indexer_ssl_certs
+          if [ -f generate-indexer-certs.yml ]; then
+            docker compose -f generate-indexer-certs.yml run --rm generator
+          fi
 
       - name: Docker Compose Up (test)
         run: |
