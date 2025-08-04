@@ -37,8 +37,6 @@ jobs:
     services:
       docker:
         image: docker:24.0.7-dind
-        privileged: true
-        options: --dns 8.8.8.8
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
