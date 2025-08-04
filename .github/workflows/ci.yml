@@ -63,10 +63,14 @@ jobs:
           docker ps -a
           docker compose ps
 
+
       - name: Wait for Wazuh Manager container
+        id: wait_manager
         run: |
           for i in {1..10}; do
-            if docker ps | grep wazuh.manager; then
+            MANAGER_ID=$(docker ps --format '{{.ID}} {{.Image}}' | grep 'wazuh/wazuh-manager' | awk '{print $1}')
+            if [ -n "$MANAGER_ID" ]; then
+              echo "manager_id=$MANAGER_ID" >> $GITHUB_OUTPUT
               exit 0
             fi
             sleep 10
@@ -76,14 +80,18 @@ jobs:
           exit 1
 
 
+
       - name: Healthcheck Wazuh Manager
         run: |
-          docker exec wazuh.manager curl -f http://localhost:55000
+          MANAGER_ID=${{ steps.wait_manager.outputs.manager_id }}
+          docker exec $MANAGER_ID curl -f http://localhost:55000
+
 
 
       - name: Healthcheck Wazuh Dashboard
         run: |
-          docker exec wazuh.dashboard curl -f http://localhost:5601
+          DASHBOARD_ID=$(docker ps --format '{{.ID}} {{.Image}}' | grep 'wazuh/wazuh-dashboard' | awk '{print $1}')
+          docker exec $DASHBOARD_ID curl -f http://localhost:5601
 
 
       - name: Print all container logs on failure
