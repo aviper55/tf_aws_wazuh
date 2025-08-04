@@ -55,20 +55,40 @@ jobs:
             docker compose -f generate-indexer-certs.yml run --rm generator
           fi
 
+
       - name: Docker Compose Up (test)
         run: |
           docker compose up -d
-          sleep 60
+          sleep 10
           docker ps -a
           docker compose ps
+
+      - name: Wait for Wazuh Manager container
+        run: |
+          for i in {1..10}; do
+            if docker ps | grep wazuh.manager; then
+              exit 0
+            fi
+            sleep 10
+          done
+          docker ps -a
+          docker logs $(docker ps -aq)
+          exit 1
+
 
       - name: Healthcheck Wazuh Manager
         run: |
           docker exec wazuh.manager curl -f http://localhost:55000
 
+
       - name: Healthcheck Wazuh Dashboard
         run: |
           docker exec wazuh.dashboard curl -f http://localhost:5601
+
+
+      - name: Print all container logs on failure
+        if: failure()
+        run: docker logs $(docker ps -aq)
 
       - name: Docker Compose Down
         if: always()
