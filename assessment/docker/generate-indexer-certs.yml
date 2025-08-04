@@ -1,11 +1,9 @@
 version: '3.9'
+# Wazuh App Copyright (C) 2017, Wazuh Inc. (License GPLv2)
 services:
   generator:
-    image: wazuh/wazuh-indexer:4.13.0-rc3
-    command: ["bash", "-c", "/usr/share/wazuh-indexer/certs-tool/generate-certs.sh"]
-    environment:
-      - NODE_NAME=manager
-      - CERTS_DIR=/certs
-    user: root
+    image: wazuh/wazuh-certs-generator:0.0.2
+    hostname: wazuh-certs-generator
     volumes:
-      - ./config/certs:/certs
+      - ./config/wazuh_indexer_ssl_certs/:/certificates/
+      - ./config/certs.yml:/config/certs.yml
