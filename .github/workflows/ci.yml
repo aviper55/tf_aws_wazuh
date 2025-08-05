@@ -91,6 +91,8 @@ jobs:
           CERT=./config/wazuh_indexer_ssl_certs/wazuh.manager.pem
           KEY=./config/wazuh_indexer_ssl_certs/wazuh.manager-key.pem
           CA=./config/wazuh_indexer_ssl_certs/root-ca.pem
+
+          curl --cert $CERT --key $KEY --cacert $CA -u $USER:$PWD -k -X GET "https://localhost:55000/security/user/authenticate" -H "Content-Type:application/json" -d "{\"username\":\"$USER\",\"password\":\"$PWD\"}" -v
           curl --cert $CERT --key $KEY --cacert $CA -u $USER:$PWD -k -X GET "https://localhost:55000/security/user/authenticate" -H "Content-Type:application/json" -d "{\"username\":\"$USER\",\"password\":\"$PWD\"}"
           TOKEN=$(curl --cert $CERT --key $KEY --cacert $CA -u $USER:$PWD -k -X GET "https://localhost:55000/security/user/authenticate" -H "Content-Type:application/json" -d "{\"username\":\"$USER\",\"password\":\"$PWD\"}" | jq -r .data.token)
           RESPONSE=$(curl --cert $CERT --key $KEY --cacert $CA -k -H "Authorization: Bearer $TOKEN" https://localhost:55000/)
