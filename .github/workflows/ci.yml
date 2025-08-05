@@ -54,6 +54,7 @@ jobs:
           if [ -f generate-indexer-certs.yml ]; then
             docker compose -f generate-indexer-certs.yml run --rm generator
           fi
+          chmod -R 644 ./config/wazuh_indexer_ssl_certs/*
 
 
       - name: Docker Compose Up (test)
@@ -86,6 +87,7 @@ jobs:
           export USER=wazuh-wui
           export PWD=MyS3cr37P450r.*-
           sudo su
+          ls -la ./config/wazuh_indexer_ssl_certs/
           CERT=./config/wazuh_indexer_ssl_certs/wazuh.manager.pem
           KEY=./config/wazuh_indexer_ssl_certs/wazuh.manager-key.pem
           CA=./config/wazuh_indexer_ssl_certs/root-ca.pem
