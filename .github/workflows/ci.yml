@@ -85,6 +85,7 @@ jobs:
         run: |
           export USER=wazuh-wui
           export PWD=MyS3cr37P450r.*-
+          sudo su
           CERT=./config/wazuh_indexer_ssl_certs/wazuh.manager.pem
           KEY=./config/wazuh_indexer_ssl_certs/wazuh.manager-key.pem
           CA=./config/wazuh_indexer_ssl_certs/root-ca.pem
