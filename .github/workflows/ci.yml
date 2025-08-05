@@ -54,7 +54,7 @@ jobs:
           if [ -f generate-indexer-certs.yml ]; then
             docker compose -f generate-indexer-certs.yml run --rm generator
           fi
-          chmod -R 644 ./config/wazuh_indexer_ssl_certs/*
+          sudo chmod -R 644 ./config/wazuh_indexer_ssl_certs/*
 
 
       - name: Docker Compose Up (test)
