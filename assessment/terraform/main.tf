@@ -1,3 +1,15 @@
+data "aws_ami" "amazon_linux_2" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
@@ -109,11 +121,12 @@ resource "aws_security_group" "wazuh_sg" {
 }
 
 resource "aws_instance" "wazuh" {
-  ami           = "ami-0c02fb55956c7d316" # Amazon Linux 2 AMI
+  ami           = data.aws_ami.amazon_linux_2.id # Amazon Linux 2 AMI
   instance_type = "t3.xlarge"
   subnet_id     = aws_subnet.private[0].id
   vpc_security_group_ids = [aws_security_group.wazuh_sg.id]
   iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
+  user_data = file("${path.module}/../scripts/setup.sh")
   tags = {
     Name = "wazuh-instance"
   }
