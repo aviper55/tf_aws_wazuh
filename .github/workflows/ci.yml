@@ -86,24 +86,30 @@ jobs:
         run: |
           export USER=wazuh-wui
           export PWD=MyS3cr37P450r.*-
-          sudo su
-          ls -la ./config/wazuh_indexer_ssl_certs/
-          CERT=./config/wazuh_indexer_ssl_certs/wazuh.manager.pem
-          KEY=./config/wazuh_indexer_ssl_certs/wazuh.manager-key.pem
-          CA=./config/wazuh_indexer_ssl_certs/root-ca.pem
-
-          curl --cert $CERT --key $KEY --cacert $CA -u $USER:$PWD -k -X GET "https://localhost:55000/security/user/authenticate" -H "Content-Type:application/json" -d "{\"username\":\"$USER\",\"password\":\"$PWD\"}" -v
-          curl --cert $CERT --key $KEY --cacert $CA -u $USER:$PWD -k -X GET "https://localhost:55000/security/user/authenticate" -H "Content-Type:application/json" -d "{\"username\":\"$USER\",\"password\":\"$PWD\"}"
-          TOKEN=$(curl --cert $CERT --key $KEY --cacert $CA -u $USER:$PWD -k -X GET "https://localhost:55000/security/user/authenticate" -H "Content-Type:application/json" -d "{\"username\":\"$USER\",\"password\":\"$PWD\"}" | jq -r .data.token)
-          RESPONSE=$(curl --cert $CERT --key $KEY --cacert $CA -k -H "Authorization: Bearer $TOKEN" https://localhost:55000/)
-          TITLE=$(echo "$RESPONSE" | jq -r '.data.title')
-          if [ "$TITLE" = "Wazuh API REST" ]; then
-            echo "Healthcheck passed: Wazuh API REST detected."
-          else
-            echo "Healthcheck failed: Unexpected API response."
-            echo "$RESPONSE"
-            exit 1
-          fi
+          MANAGER_ID=$(docker ps --format '{{.ID}} {{.Image}}' | grep 'wazuh/wazuh-manager' | awk '{print $1}')
+          for i in {1..10}; do
+            RESPONSE=$(docker exec $MANAGER_ID curl -k -u $USER:$PWD -X GET "https://localhost:55000/security/user/authenticate" -H "Content-Type:application/json" -d "{\"username\":\"$USER\",\"password\":\"$PWD\"}" || true)
+            if echo "$RESPONSE" | grep -q 'token'; then
+              echo "Wazuh API is up."
+              TOKEN=$(echo "$RESPONSE" | jq -r .data.token)
+              API_RESPONSE=$(docker exec $MANAGER_ID curl -k -H "Authorization: Bearer $TOKEN" https://localhost:55000/)
+              TITLE=$(echo "$API_RESPONSE" | jq -r '.data.title')
+              if [ "$TITLE" = "Wazuh API REST" ]; then
+                echo "Healthcheck passed: Wazuh API REST detected."
+                exit 0
+              else
+                echo "Healthcheck failed: Unexpected API response."
+                echo "$API_RESPONSE"
+                exit 1
+              fi
+            fi
+            echo "Waiting for Wazuh API... ($i/10)"
+            sleep 10
+          done
+          echo "Wazuh API did not become ready in time."
+          docker ps -a
+          docker logs $(docker ps -aq)
+          exit 1
       
 
       - name: Print all container logs on failure
